@@ -1,10 +1,11 @@
 import React, {useReducer,useCallback, useRef,useMemo} from "react";
 import UserList from "./UserList";
 import CreateUser from "./CreateUser";
+import UseInputs from "./hooks/useInputs";
 
 
 //https://react.vlpt.us/
-//20. useReducer 를 사용하여 상태 업데이트 로직 분리하기
+//22. Context API 를 사용한 전역 값 관리
 function countActiveUsers(users){
     console.log("활성");
     return users.filter(user=>user.active).length
@@ -69,55 +70,20 @@ function reducer(state,action) {
     }
 }
 
+export const UserDispatch = React.createContext(null);
+
 function App() {
     const [state, dispatch] = useReducer(reducer, initialState);
-    const nextId = useRef(4);
 
     const {users} = state;
-    const {username,email} = state.inputs;
-
-    const onChange = useCallback(e=>{
-        const {name,value} = e.target;
-        dispatch({
-            type:'CHANGE_INPUT',
-            name,
-            value
-        })
-    },[]);
-
-    const onCreate = useCallback( () => {
-        dispatch({
-            type:'CREATE_USER',
-            user : {
-                id: nextId.current,
-                username,
-                email
-            }
-        })
-        nextId.current++;
-    },[username,email]);
-
-    const onToggle = useCallback(id=>{
-        dispatch({
-            type:'TOGGLE_USER',
-            id
-        })
-    },[]);
-
-    const onRemove = useCallback(id => {
-        dispatch({
-            type: 'REMOVE_USER',
-            id
-        });
-    }, []);
 
     const count = useMemo(() => countActiveUsers(users), [users]);
     return (
-        <div>
-            <CreateUser username={username} email={email} onChange={onChange} onCreate={onCreate} />
-            <UserList users={users} onToggle={onToggle} onRemove={onRemove}/>
+        <UserDispatch.Provider value={dispatch}>
+            <CreateUser />
+            <UserList users={users}/>
             <div>활성사용자 수 : {count}</div>
-        </div>
+        </UserDispatch.Provider>
     );
 }
 
